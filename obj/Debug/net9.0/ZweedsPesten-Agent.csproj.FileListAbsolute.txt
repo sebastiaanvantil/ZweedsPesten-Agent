@@ -1,0 +1,14 @@
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.GeneratedMSBuildEditorConfig.editorconfig
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.AssemblyInfoInputs.cache
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.AssemblyInfo.cs
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.csproj.CoreCompileInputs.cache
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\bin\Debug\net9.0\ZweedsPesten-Agent.exe
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\bin\Debug\net9.0\ZweedsPesten-Agent.deps.json
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\bin\Debug\net9.0\ZweedsPesten-Agent.runtimeconfig.json
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\bin\Debug\net9.0\ZweedsPesten-Agent.dll
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\bin\Debug\net9.0\ZweedsPesten-Agent.pdb
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.dll
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\refint\ZweedsPesten-Agent.dll
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.pdb
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.genruntimeconfig.cache
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ref\ZweedsPesten-Agent.dll
