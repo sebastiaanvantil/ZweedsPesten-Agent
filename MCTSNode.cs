@@ -35,7 +35,7 @@ public class MCTSNode {
         var permittedActions = Action.GetAllowedActions(player, MCTSState.Pile, opponents);
         foreach (var action in permittedActions) {
             var childMCTSState = new MCTSState(MCTSState);
-            var clonedPlayer = new Player(player);
+            var clonedPlayer = childMCTSState.Players.First(p => p.Id == player.Id);
             
             childMCTSState.PlayerQueue.RemoveFirst();
             childMCTSState.PlayerQueue.AddFirst(clonedPlayer);
@@ -43,11 +43,13 @@ public class MCTSNode {
             int playerIndex = childMCTSState.Players.FindIndex(p => p.Id == clonedPlayer.Id);
             if (playerIndex >= 0) childMCTSState.Players[playerIndex] = clonedPlayer;
             
-            if (!Game.OneMoreTurn(childMCTSState.Pile)) {
+            
+            Action.PlayAction(clonedPlayer, childMCTSState.Pile, action);
+            if (!Game.OneMoreTurn(childMCTSState.Pile, action)) {
                 childMCTSState.PlayerQueue.RemoveFirst();
                 childMCTSState.PlayerQueue.AddLast(clonedPlayer);
             }
-            Action.PlayAction(clonedPlayer, childMCTSState.Pile, action);
+            
             while (childMCTSState.Stock.Cards.Count > 0 && clonedPlayer.Hand.Count < 3) {
                 var cardToDraw = childMCTSState.Stock.Cards.Pop();
                 clonedPlayer.DrawToHand(cardToDraw);

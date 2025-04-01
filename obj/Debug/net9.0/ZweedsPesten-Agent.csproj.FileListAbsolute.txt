@@ -12,3 +12,4 @@ D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\refint\Zwe
 D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.pdb
 D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.genruntimeconfig.cache
 D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ref\ZweedsPesten-Agent.dll
+D:\UU\Scriptie\ZweedsPesten-Agent\ZweedsPesten-Agent\obj\Debug\net9.0\ZweedsPesten-Agent.sourcelink.json

@@ -24,6 +24,17 @@ public class Action {
         if (pile.Cards.Count > 0) {
             topCard = pile.Cards.Peek();
         }
+        
+        if (IsValidPlay(player.GetHighestCard().Rank, topCard.Rank)) {
+            actions.Add(ActionType.PlayHighest);
+            actions.Add(ActionType.PlayMultipleHighest);
+        }
+
+        var lowestPermittedCard = player.GetLowestPermittedCard(topCard.Rank).Rank;
+        if (IsValidPlay(lowestPermittedCard, topCard.Rank)) {
+            actions.Add(ActionType.PlayLowestPermitted);
+            actions.Add(ActionType.PlayMultipleLowestPermitted);
+        }
 
         if (pile.Cards.Count > 0) {
             actions.Add(ActionType.PickUpPile);
@@ -44,17 +55,6 @@ public class Action {
         if (player.HasTen() && IsValidPlay(Rank.Ten, topCard.Rank)) {
             actions.Add(ActionType.PlayTen);
             actions.Add(ActionType.PlayMultipleTen);
-        }
-
-        if (IsValidPlay(player.GetHighestCard().Rank, topCard.Rank)) {
-            actions.Add(ActionType.PlayHighest);
-            actions.Add(ActionType.PlayMultipleHighest);
-        }
-
-        var lowestPermittedCard = player.GetLowestPermittedCard(topCard.Rank).Rank;
-        if (IsValidPlay(lowestPermittedCard, topCard.Rank)) {
-            actions.Add(ActionType.PlayLowestPermitted);
-            actions.Add(ActionType.PlayMultipleLowestPermitted);
         }
 
         return actions;

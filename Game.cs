@@ -73,14 +73,7 @@ public class Game {
             var player = PlayerQueue.First();
             Turn(player);
             Console.WriteLine("turn: " + i);
-            PlayerQueue.RemoveFirst();
-            bool anotherTurn = OneMoreTurn(Pile);
-            if (Pile.Cards.Count == 0 || anotherTurn) {
-                PlayerQueue.AddFirst(player);
-            }
-            else {
-                PlayerQueue.AddLast(player);
-            }
+            
             gameOver = GoalConditionReached();
             i++;
         }
@@ -106,12 +99,25 @@ public class Game {
             var cardToDraw = Stock.Cards.Pop();
             player.DrawToHand(cardToDraw);
         }
+        
+        PlayerQueue.RemoveFirst();
+        bool anotherTurn = OneMoreTurn(Pile, action);
+        if (Pile.Cards.Count == 0 || anotherTurn) {
+            PlayerQueue.AddFirst(player);
+        }
+        else {
+            PlayerQueue.AddLast(player);
+        }
+        
         if (player.Id == AgentId) {
             History.Add((currentState, action));
         }
     }
     
-    public static bool OneMoreTurn(Pile pile) {
+    public static bool OneMoreTurn(Pile pile, Action.ActionType action) {
+        if (action == Action.ActionType.PickUpPile) {
+            return false;
+        }
         if (pile.Cards.Count == 0) {
             return true;
         }

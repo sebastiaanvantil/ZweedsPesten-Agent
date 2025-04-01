@@ -39,7 +39,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
 
     public double Simulation(MCTSNode selectedNode) {
         var node = selectedNode;
-        //int i = 0;
+        int i = 0;
         while (!GoalConditionReached(node.MCTSState)) {
             node.Children = node.ExpandChildren();
             
@@ -55,12 +55,14 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
                 }
             }
             node = bestChild;
-            //i++;
+            i++;
+            Console.WriteLine("Simulation Iteration: " + i);
+            /*
             int numCardsInGame = bestChild.MCTSState.Stock.Cards.Count + bestChild.MCTSState.Pile.Cards.Count + bestChild.MCTSState.Pile.BurnedCards.Count;
             foreach (var player in bestChild.MCTSState.Players) {
                 numCardsInGame += player.Hand.Count + player.Open.Count + player.Closed.Count;
             }
-            Console.WriteLine("Number of cards in the game: " + numCardsInGame);
+            Console.WriteLine("Number of cards in the game: " + numCardsInGame);*/
         }
         return RewardFromGame(node.MCTSState);
     }
@@ -74,7 +76,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
         }
     }
 
-    public MCTSNode BestUCTChild(MCTSNode parent) {
+    private MCTSNode BestUCTChild(MCTSNode parent) {
         return parent.Children.MaxBy(child => (child.Value/child.Visits + _explorationConstant * double.Sqrt(Math.Log(parent.Visits)/child.Visits)))!;
     }
     
@@ -82,7 +84,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
         return currentMCTSState.Players.Any(player => player.GetListOfCards() == (List<Card>)[]);
     }
 
-    private int RewardFromGame(MCTSState currentMCTSState) {
+     private static int RewardFromGame(MCTSState currentMCTSState) {
         var player = currentMCTSState.PlayerQueue.First();
         if (player.GetListOfCards().Count == 0) {
             return 1;

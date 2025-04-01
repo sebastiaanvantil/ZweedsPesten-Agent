@@ -175,8 +175,8 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         }
     }
 
-    public static Dictionary<string, object?> MCTSNode2Example(MCTSNode node, string? action) {
-        Dictionary<string, object?> example = new Dictionary<string, object?>();
+    public static Dictionary<string, object> MCTSNode2Example(MCTSNode node, string action) {
+        var example = new Dictionary<string, object>();
         var player = node.MCTSState.PlayerQueue.First();
         var pile = node.MCTSState.Pile;
         var stock = node.MCTSState.Stock;

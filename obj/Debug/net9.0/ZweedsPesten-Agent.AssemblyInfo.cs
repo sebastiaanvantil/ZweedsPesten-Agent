@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ZweedsPesten-Agent")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0ed06ef0c6bfd0e1a7e0f0655ab859a00b84a2cb")]
 [assembly: System.Reflection.AssemblyProductAttribute("ZweedsPesten-Agent")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ZweedsPesten-Agent")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
