@@ -16,11 +16,19 @@ public class Agent {
     public void Train(int maxEpisodes) {
         for (int episode = 0; episode < maxEpisodes; episode++) {
             var newExamples = RunEpisode();
-            foreach (var example in newExamples) {
-                
+            foreach (var newExample in newExamples) {
+                foreach (var example in examples) {
+                    if (EqualDicts(newExample, example)) {
+                        example["q_value"] = newExample["q_value"];
+                    }
+                    else {
+                        examples.Add(newExample);
+                    }
+                }
             }
             UpdateQFunction(examples);
         }
+        QFunction.PrintTree(QFunction.Root, 100);
     }
 
     public List<Dictionary<string, object>> RunEpisode() {

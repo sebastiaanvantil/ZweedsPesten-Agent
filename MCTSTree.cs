@@ -10,13 +10,9 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
 
     public Action.ActionType RunMCTS(int simulations) {
         for (int i = 0; i < simulations; i++) {
-            Console.WriteLine("Starting MCTS iteration " + i);
             var selectedNode = Selection();
-            Console.WriteLine("Selection succeeded at iteration " + i);
             double reward = Simulation(selectedNode);
-            Console.WriteLine("Simulation succeeded at iteration" + i);
             BackPropagation(selectedNode, reward);
-            Console.WriteLine("Finished MCTS iteration " + i);
         }
 
         var bestChild = _rootNode.Children.MaxBy(child => child.Visits);
@@ -43,20 +39,34 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
         while (!GoalConditionReached(node.MCTSState)) {
             node.Children = node.ExpandChildren();
             
-            var bestChild = node.Children[0];
-            var example1 = TILDE_RT.MCTSNode2Example(node, bestChild.ParentAction.ToString());
-            double? bestQValue = _qFunction.Predict(_qFunction.Root, example1);
+            var firstchild = node.Children[0];
+            var example = TILDE_RT.MCTSNode2Example(node, firstchild.ParentAction.ToString());
+            double bestQValue = _qFunction.Predict(_qFunction.Root, example);
+
+            var softMaxValues = (List<double>)[];
             foreach (var child in node.Children) {
-                var example = TILDE_RT.MCTSNode2Example(node, child.ParentAction.ToString());
-                double? prediction = _qFunction.Predict(_qFunction.Root, example);
-                if (prediction > bestQValue) {
-                    bestChild = child;
-                    bestQValue = prediction;
+                example = TILDE_RT.MCTSNode2Example(node, child.ParentAction.ToString());
+                double prediction = _qFunction.Predict(_qFunction.Root, example);
+
+                softMaxValues.Add(Math.Pow(Math.E, prediction));
+            }
+
+            double totalSoftMaxValue = softMaxValues.Sum();
+            var normalisedSoftMaxValues = softMaxValues.Select(value => value / totalSoftMaxValue).ToList();
+            double random = _rnd.NextDouble();
+            double sum = 0;
+            int index = 0;
+            for (int m = 0; m < normalisedSoftMaxValues.Count; m++) {
+                sum += normalisedSoftMaxValues[m];
+                if (random < sum) {
+                    index = m;
+                    break;
                 }
             }
-            node = bestChild;
+            
+            node = node.Children[index];
             i++;
-            Console.WriteLine("Simulation Iteration: " + i);
+            //Console.WriteLine("Simulation Iteration: " + i);
             /*
             int numCardsInGame = bestChild.MCTSState.Stock.Cards.Count + bestChild.MCTSState.Pile.Cards.Count + bestChild.MCTSState.Pile.BurnedCards.Count;
             foreach (var player in bestChild.MCTSState.Players) {
@@ -81,7 +91,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
     }
     
     public static bool GoalConditionReached(MCTSState currentMCTSState) {
-        return currentMCTSState.Players.Any(player => player.GetListOfCards() == (List<Card>)[]);
+        return currentMCTSState.Players.Any(player => player.GetListOfCards().Count == 0);
     }
 
      private static int RewardFromGame(MCTSState currentMCTSState) {

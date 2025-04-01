@@ -27,7 +27,7 @@ public class Pile {
     }
     
     public void Burn() {
-        Console.WriteLine("burning cards");
+        //Console.WriteLine("burning cards");
         while (Cards.Count > 0) {
             var burnedcard = Cards.Pop();
             BurnedCards.Push(burnedcard);

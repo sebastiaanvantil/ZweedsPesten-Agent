@@ -61,11 +61,11 @@ public class Action {
     }
 
     private static bool IsValidPlay(Rank cardRank, Rank topCardRank) {
-        if (topCardRank == Rank.NonExist) {
-            return true;
-        }
         if (cardRank == Rank.NonExist) {
             return false;
+        }
+        if (topCardRank == Rank.NonExist) {
+            return true;
         }
         if (cardRank == Rank.Two || cardRank == Rank.Three) {
             return true;

@@ -10,7 +10,7 @@ namespace ZweedsPesten_Agent
         public static void Main(string[] args) {
             var QFunction = new TILDE_RT(100, 2);
             var ZweedsPesten_Agent = new Agent(QFunction);
-            ZweedsPesten_Agent.Train(1000);
+            ZweedsPesten_Agent.Train(1);
             QFunction.PrintTree(QFunction.Root, 100);
         }
     }
@@ -18,7 +18,7 @@ namespace ZweedsPesten_Agent
 
 /*
 
-var toyList = new List<Dictionary<string, object>> {
+var toyExamples = new List<Dictionary<string, object>> {
             new Dictionary<string, object> { { "num_cards", 8 }, { "highest_card", 12 }, { "lowest_permitted_card", 12 }, { "num_pile_cards", 4 }, { "num_stock_cards", 13 }, { "top_card_pile_value", 14 }, { "has_2", false }, { "has_3", false }, { "has_7", true }, { "has_10", false }, { "action", "PlayTwo" }, { "q_value", 0.241f } },
             new Dictionary<string, object> { { "num_cards", 4 }, { "highest_card", 6 }, { "lowest_permitted_card", 4 }, { "num_pile_cards", 6 }, { "num_stock_cards", 8 }, { "top_card_pile_value", 14 }, { "has_2", false }, { "has_3", true }, { "has_7", true }, { "has_10", true }, { "action", "PlayMultipleTen" }, { "q_value", 0.770f } },
             new Dictionary<string, object> { { "num_cards", 12 }, { "highest_card", 5 }, { "lowest_permitted_card", 5 }, { "num_pile_cards", 8 }, { "num_stock_cards", 10 }, { "top_card_pile_value", 5 }, { "has_2", true }, { "has_3", true }, { "has_7", true }, { "has_10", true }, { "action", "PlayTen" }, { "q_value", 0.417f } },
