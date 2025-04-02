@@ -4,12 +4,18 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
     private readonly MCTSNode _rootNode = new(initialMctsState);
     private readonly Random _rnd = new();
     private const double ExplorationConstant = 1;
+    private const int MaxNumSimulationIterations = 1000;
 
     public Action.ActionType RunMCTS(int simulations) {
         for (int i = 0; i < simulations; i++) {
             var selectedNode = Selection();
-            double reward = Simulation(selectedNode);
-            BackPropagation(selectedNode, reward);
+            (bool invalidGame, double reward) = Simulation(selectedNode);
+            if (!invalidGame) {
+                BackPropagation(selectedNode, reward);
+            }
+            else {
+                Console.WriteLine("Encountered invalid game");
+            }
         }
 
         var bestChild = _rootNode.Children.MaxBy(child => child.Visits)!;
@@ -34,10 +40,10 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
         return result;
     }
 
-    private double Simulation(MCTSNode selectedNode) {
+    private (bool, double) Simulation(MCTSNode selectedNode) {
         var node = selectedNode;
         int i = 0;
-        while (!GoalConditionReached(node.MCTSState)) {
+        while (!GoalConditionReached(node.MCTSState) && i < MaxNumSimulationIterations) {
             node.Children = node.ExpandChildren();
 
             var softMaxValues = (List<double>)[];
@@ -60,12 +66,16 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
                     break;
                 }
             }
+
+            
             
             node = node.Children[index];
             i++;
             //Console.WriteLine("Simulation Iteration: " + i);
         }
-        return RewardFromGame(node.MCTSState);
+        bool invalidGame = i >= MaxNumSimulationIterations;
+        
+        return (invalidGame, RewardFromGame(node.MCTSState));
     }
 
     private void BackPropagation(MCTSNode selectedNode, double reward) {

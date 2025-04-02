@@ -79,7 +79,6 @@ public class Game {
     // The game is over if there is any player that has no cards left
     private bool GoalConditionReached() {
         bool goal = _players.Any(player => player.GetListOfCards().Count == 0);
-        if (goal) WinningPlayer();
         return goal;
     }
 
@@ -159,7 +158,7 @@ public class Game {
     }
 
     public List<Dictionary<string, object>> GetExamplesFromHistory() {
-        const double DiscountFactor = 0.99;
+        const double discountFactor = 0.99;
         var qValues = Enumerable.Repeat((double)0, _history.Count).ToList();
         var examples = new List<Dictionary<string, object>>();
         for (int i = _history.Count - 1; i >= 0; i--) {
@@ -171,14 +170,14 @@ public class Game {
             var example = GetExample(player, pile, stock, action);
 
             int reward = 0;
-            if (MCTSTree.GoalConditionReached(mctsState)) {
+            if (i == _history.Count - 1) {
                 bool won = WinningPlayer().Id == _agentId;
                 reward = won ? 1 : 0;
             }
 
             double qValue;
             if (i < _history.Count - 1) {
-                qValue = reward + DiscountFactor * qValues[i + 1];
+                qValue = reward + discountFactor * qValues[i + 1];
             }
             else {
                 qValue = reward;

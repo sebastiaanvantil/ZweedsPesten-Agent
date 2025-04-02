@@ -2,7 +2,7 @@ namespace ZweedsPesten_Agent;
 
 public class Agent {
     private readonly TILDE_RT _qFunction;
-    private readonly List<Dictionary<string, object>> _examples;
+    private List<Dictionary<string, object>> _examples;
     private readonly int _agentId;
     
     public Agent(TILDE_RT qFunction) {
@@ -19,12 +19,14 @@ public class Agent {
             var newExamples = RunEpisode();
             var examplesToRemove = new List<Dictionary<string, object>>();
             foreach (var newExample in newExamples) {
-                _examples.Add(newExample);
                 examplesToRemove.AddRange(_examples.Where(example => EqualDicts(newExample, example)));
+                _examples.Add(newExample);
             }
             foreach (var example in examplesToRemove) {
                 _examples.Remove(example);
             }
+
+            _examples.RemoveAll(example => (double)example["q_value"] == 0);
             UpdateQFunction(_examples);
         }
         _qFunction.PrintTree(_qFunction.Root, 100);
