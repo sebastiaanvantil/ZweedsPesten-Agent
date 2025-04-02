@@ -4,9 +4,10 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
     private readonly MCTSNode _rootNode = new(initialMctsState);
     private readonly Random _rnd = new();
     private const double ExplorationConstant = 1;
-    private const int MaxNumSimulationIterations = 1000;
+    private const int MaxNumSimulationIterations = 2000;
 
-    public Action.ActionType RunMCTS(int simulations) {
+    public (int, Action.ActionType) RunMCTS(int simulations) {
+        int invalidGameCount = 0;
         for (int i = 0; i < simulations; i++) {
             var selectedNode = Selection();
             (bool invalidGame, double reward) = Simulation(selectedNode);
@@ -14,13 +15,13 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
                 BackPropagation(selectedNode, reward);
             }
             else {
-                Console.WriteLine("Encountered invalid game");
+                invalidGameCount++;
             }
         }
 
         var bestChild = _rootNode.Children.MaxBy(child => child.Visits)!;
 
-        return bestChild.ParentAction;
+        return (invalidGameCount, bestChild.ParentAction);
     }
 
     private MCTSNode Selection() {
@@ -44,6 +45,9 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
         var node = selectedNode;
         int i = 0;
         while (!GoalConditionReached(node.MCTSState) && i < MaxNumSimulationIterations) {
+            if (i == 1500) {
+                Console.WriteLine("");
+            }
             node.Children = node.ExpandChildren();
 
             var softMaxValues = (List<double>)[];

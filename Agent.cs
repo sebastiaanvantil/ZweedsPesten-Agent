@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace ZweedsPesten_Agent;
 
 public class Agent {
@@ -15,8 +17,7 @@ public class Agent {
 
     public void Train(int maxEpisodes) {
         for (int episode = 0; episode < maxEpisodes; episode++) {
-            Console.WriteLine("Starting Episode: " + episode);
-            var newExamples = RunEpisode();
+            var newExamples = RunEpisode(episode);
             var examplesToRemove = new List<Dictionary<string, object>>();
             foreach (var newExample in newExamples) {
                 examplesToRemove.AddRange(_examples.Where(example => EqualDicts(newExample, example)));
@@ -25,22 +26,25 @@ public class Agent {
             foreach (var example in examplesToRemove) {
                 _examples.Remove(example);
             }
-
             _examples.RemoveAll(example => (double)example["q_value"] == 0);
-            UpdateQFunction(_examples);
+            _qFunction.Train(_examples);
         }
         _qFunction.PrintTree(_qFunction.Root, 100);
     }
 
-    private List<Dictionary<string, object>> RunEpisode() {
+    private List<Dictionary<string, object>> RunEpisode(int episode) {
+        Console.WriteLine("Starting Episode: " + episode);
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
         var game = new Game(3, _agentId, _qFunction);
-        game.Run();
+        int invalidGameCount = game.Run();
         var newExamples = game.GetExamplesFromHistory();
+        stopwatch.Stop();
+        Console.WriteLine("Finished Episode " + episode + 
+                          "\nInvalid Game Count: " + invalidGameCount + 
+                          "\nRuntime: " + stopwatch.Elapsed.TotalSeconds + " seconds" +
+                          "\n");
         return newExamples;
-    }
-
-    private void UpdateQFunction(List<Dictionary<string, object>> examples) {
-        _qFunction.Train(examples);
     }
 
     private static bool EqualDicts(Dictionary<string, object> a, Dictionary<string, object> b) {

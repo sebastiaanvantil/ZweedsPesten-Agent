@@ -11,5 +11,5 @@ public class TILDE_RT_Node {
         Qvalue = qvalue ?? 0;
     }
     
-    public bool IsLeafNode() => Qvalue == 0;
+    public bool IsLeafNode() => LeftChild == null && RightChild == null;
 }

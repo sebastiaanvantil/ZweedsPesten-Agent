@@ -151,7 +151,6 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             else if (!nodeHasChanged && node.Test.Contains("==")) {
                 string[] test = node.Test.Split("==");
                 string feature = test[0].Trim();
-                Console.WriteLine("value: " + example[feature]);
                 node = example[feature] is true ? node.LeftChild : node.RightChild;
             }
         }

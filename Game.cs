@@ -58,22 +58,23 @@ public class Game {
         }
     }
 
-    public void Run() {
+    public int Run() {
         DealCards();
         var startingPlayer = GetStartingPlayer();
         InitQueue(startingPlayer);
         
         bool gameOver = false;
-        int i = 0;
+        //int i = 0;
+        int invalidGameCount = 0;
         while (!gameOver) {
             var player = _playerQueue.First();
-            Turn(player);
-            Console.WriteLine("Turn: " + i);
+            invalidGameCount += Turn(player);
+            //Console.WriteLine("Turn: " + i);
             
             gameOver = GoalConditionReached();
-            i++;
+            //i++;
         }
-        
+        return invalidGameCount;
     }
     
     // The game is over if there is any player that has no cards left
@@ -88,12 +89,12 @@ public class Game {
         return winningPlayer;
     }
 
-    private void Turn(Player player) {
+    private int Turn(Player player) {
         var currentState = new MCTSState(_playerQueue, _players, _pile, _stock);
 
         var mctsGame = new MCTSTree(currentState, _qFunction);
         
-        var bestAction = mctsGame.RunMCTS(100);
+        (int invalidGameCount, var bestAction) = mctsGame.RunMCTS(100);
         Action.PlayAction(player, _pile, bestAction);
         while (_stock.Cards.Count > 0 && player.Hand.Count < 3) {
             var cardToDraw = _stock.Cards.Pop();
@@ -112,6 +113,8 @@ public class Game {
         if (player.Id == _agentId) {
             _history.Add((currentState, bestAction));
         }
+
+        return invalidGameCount;
     }
     
     public static bool OneMoreTurn(Pile pile, Action.ActionType action) {
