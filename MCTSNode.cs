@@ -1,16 +1,13 @@
-using System.Dynamic;
-using System.Reflection;
-
 namespace ZweedsPesten_Agent;
 
 public class MCTSNode {
-    public MCTSState MCTSState;
-    public MCTSNode? Parent;
-    public Action.ActionType ParentAction;
+    public readonly MCTSState MCTSState;
+    public readonly MCTSNode? Parent;
+    public readonly Action.ActionType ParentAction;
     public List<MCTSNode> Children;
     public int Visits;
     public double Value;
-    public List<Action.ActionType> UnexploredChildren;
+    public readonly List<Action.ActionType> UnexploredChildren;
 
     public MCTSNode(MCTSState mctsState, MCTSNode? parent = null, Action.ActionType parentAction = Action.ActionType.PlayHighest) {
         MCTSState = mctsState;

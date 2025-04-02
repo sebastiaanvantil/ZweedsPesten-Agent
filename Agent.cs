@@ -1,48 +1,47 @@
 namespace ZweedsPesten_Agent;
 
 public class Agent {
-    private TILDE_RT QFunction;
-    private List<Dictionary<string, object>> examples;
-    private int AgentId;
+    private readonly TILDE_RT _qFunction;
+    private readonly List<Dictionary<string, object>> _examples;
+    private readonly int _agentId;
     
     public Agent(TILDE_RT qFunction) {
-        QFunction = qFunction;
-        examples = new List<Dictionary<string, object>>();
+        _qFunction = qFunction;
+        _examples = new List<Dictionary<string, object>>();
         
         var rnd = new Random();
-        AgentId = rnd.Next(1, 4);
+        _agentId = rnd.Next(1, 3);
     }
 
     public void Train(int maxEpisodes) {
         for (int episode = 0; episode < maxEpisodes; episode++) {
+            Console.WriteLine("Starting Episode: " + episode);
             var newExamples = RunEpisode();
+            var examplesToRemove = new List<Dictionary<string, object>>();
             foreach (var newExample in newExamples) {
-                foreach (var example in examples) {
-                    if (EqualDicts(newExample, example)) {
-                        example["q_value"] = newExample["q_value"];
-                    }
-                    else {
-                        examples.Add(newExample);
-                    }
-                }
+                _examples.Add(newExample);
+                examplesToRemove.AddRange(_examples.Where(example => EqualDicts(newExample, example)));
             }
-            UpdateQFunction(examples);
+            foreach (var example in examplesToRemove) {
+                _examples.Remove(example);
+            }
+            UpdateQFunction(_examples);
         }
-        QFunction.PrintTree(QFunction.Root, 100);
+        _qFunction.PrintTree(_qFunction.Root, 100);
     }
 
-    public List<Dictionary<string, object>> RunEpisode() {
-        var game = new Game(3, AgentId, QFunction);
+    private List<Dictionary<string, object>> RunEpisode() {
+        var game = new Game(3, _agentId, _qFunction);
         game.Run();
         var newExamples = game.GetExamplesFromHistory();
         return newExamples;
     }
 
-    public void UpdateQFunction(List<Dictionary<string, object>> examples) {
-        QFunction.Train(examples);
+    private void UpdateQFunction(List<Dictionary<string, object>> examples) {
+        _qFunction.Train(examples);
     }
 
-    public bool EqualDicts(Dictionary<string, object> a, Dictionary<string, object> b) {
+    private static bool EqualDicts(Dictionary<string, object> a, Dictionary<string, object> b) {
         const string excludedKey = "q_value";
         
         var keysA = a.Keys.Where(k => k != excludedKey).ToList();
@@ -53,8 +52,8 @@ public class Agent {
         }
 
         foreach (string key in keysA) {
-            if (!b.ContainsKey(key)) return false;
-            if (!Equals(a[key], b[key])) return false;
+            if (!b.TryGetValue(key, out object? value)) return false;
+            if (!Equals(a[key], value)) return false;
         }
 
         return true;

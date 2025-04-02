@@ -1,40 +1,36 @@
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Linq;
-
 namespace ZweedsPesten_Agent;
 
 public class Game {
-    public List<Player> Players = [];
-    public Stock Stock = new Stock();
-    public Pile Pile = new Pile();
-    public LinkedList<Player> PlayerQueue = [];
-    public List<(MCTSState, Action.ActionType)> History = [];
-    private TILDE_RT _qFunction;
-    private int AgentId;
+    private readonly List<Player> _players = [];
+    private readonly Stock _stock = new Stock();
+    private readonly Pile _pile = new Pile();
+    private readonly LinkedList<Player> _playerQueue = [];
+    private readonly List<(MCTSState, Action.ActionType)> _history = [];
+    private readonly TILDE_RT _qFunction;
+    private readonly int _agentId;
 
     public Game(int numPlayers, int agentId, TILDE_RT qFunction) {
         for (int i = 0; i < numPlayers; i++) {
-            Players.Add(new Player(i));
+            _players.Add(new Player(i));
         }
-        AgentId = agentId;
+        _agentId = agentId;
         _qFunction = qFunction;
     }
 
     private void DealCards() {
-        foreach (var player in Players) {
+        foreach (var player in _players) {
             for (int i = 0; i < 3; i++) {
-                player.DrawToClosed(Stock.Draw());
-                player.DrawToOpen(Stock.Draw());
-                player.DrawToHand(Stock.Draw());
+                player.DrawToClosed(_stock.Draw());
+                player.DrawToOpen(_stock.Draw());
+                player.DrawToHand(_stock.Draw());
             }
         }
     }
 
     private Player GetStartingPlayer() {
-        var startingPlayer = Players[0];
+        var startingPlayer = _players[0];
         var lowestValueCard = startingPlayer.GetLowestValueCard();
-        foreach (var player in Players) {
+        foreach (var player in _players) {
             var lowestValueCardComparison = player.GetLowestValueCard();
             if (lowestValueCard.Rank > lowestValueCardComparison.Rank) {
                 startingPlayer = player;
@@ -53,12 +49,12 @@ public class Game {
 
     private void InitQueue(Player startingPlayer) {
         int startingPlayerId = startingPlayer.Id;
-        for (int i = startingPlayerId; i < Players.Count; i++) {
-            PlayerQueue.AddLast(Players[i]);
+        for (int i = startingPlayerId; i < _players.Count; i++) {
+            _playerQueue.AddLast(_players[i]);
         }
 
         for (int i = 0; i < startingPlayerId; i++) {
-            PlayerQueue.AddLast(Players[i]);
+            _playerQueue.AddLast(_players[i]);
         }
     }
 
@@ -70,7 +66,7 @@ public class Game {
         bool gameOver = false;
         int i = 0;
         while (!gameOver) {
-            var player = PlayerQueue.First();
+            var player = _playerQueue.First();
             Turn(player);
             Console.WriteLine("Turn: " + i);
             
@@ -82,53 +78,40 @@ public class Game {
     
     // The game is over if there is any player that has no cards left
     private bool GoalConditionReached() {
-        return Players.Any(player => player.GetListOfCards().Count == 0);
+        bool goal = _players.Any(player => player.GetListOfCards().Count == 0);
+        if (goal) WinningPlayer();
+        return goal;
     }
 
     private Player WinningPlayer() {
-        var winningPlayer = Players.First(player => player.GetListOfCards() == (List<Card>)[]);
-        Console.WriteLine("Winning Player: " + winningPlayer.Id + ", Agent: " + AgentId);
+        var winningPlayer = _players.First(player => player.GetListOfCards().Count == 0);
+        Console.WriteLine("Winning Player: " + winningPlayer.Id + ", Agent: " + _agentId);
         return winningPlayer;
     }
 
-    public void Turn(Player player) {
-        var opponents = Players.Where(p => p != player).ToList();
-        var currentState = new MCTSState(PlayerQueue, Players, Pile, Stock);
+    private void Turn(Player player) {
+        var currentState = new MCTSState(_playerQueue, _players, _pile, _stock);
 
-        var MCTSGame = new MCTSTree(currentState, _qFunction);
-        /*
-         code for cutting out the MCTS.
-        var possibleActions = Action.GetAllowedActions(player, currentState.Pile, opponents);
-        var bestAction = possibleActions[0];
-        var example = GetExample(player, currentState.Pile, currentState.Stock, bestAction);
-        var bestQValue = _qFunction.Predict(_qFunction.Root, example);
-        foreach (var action in possibleActions) {
-            example = GetExample(player, currentState.Pile, currentState.Stock, action);
-            var QValue = _qFunction.Predict(_qFunction.Root, example);
-            if (QValue > bestQValue) {
-                bestQValue = QValue;
-                bestAction = action;
-            }
-        }*/
+        var mctsGame = new MCTSTree(currentState, _qFunction);
         
-        var bestAction = MCTSGame.RunMCTS(100);
-        Action.PlayAction(player, Pile, bestAction);
-        while (Stock.Cards.Count > 0 && player.Hand.Count < 3) {
-            var cardToDraw = Stock.Cards.Pop();
+        var bestAction = mctsGame.RunMCTS(100);
+        Action.PlayAction(player, _pile, bestAction);
+        while (_stock.Cards.Count > 0 && player.Hand.Count < 3) {
+            var cardToDraw = _stock.Cards.Pop();
             player.DrawToHand(cardToDraw);
         }
         
-        PlayerQueue.RemoveFirst();
-        bool anotherTurn = OneMoreTurn(Pile, bestAction);
+        _playerQueue.RemoveFirst();
+        bool anotherTurn = OneMoreTurn(_pile, bestAction);
         if (anotherTurn) {
-            PlayerQueue.AddFirst(player);
+            _playerQueue.AddFirst(player);
         }
         else {
-            PlayerQueue.AddLast(player);
+            _playerQueue.AddLast(player);
         }
         
-        if (player.Id == AgentId) {
-            History.Add((currentState, bestAction));
+        if (player.Id == _agentId) {
+            _history.Add((currentState, bestAction));
         }
     }
     
@@ -136,7 +119,13 @@ public class Game {
         if (action == Action.ActionType.PickUpPile) {
             return false;
         }
-        if (pile.Cards.Count == 0) {
+        if (pile.Cards.Count > 0) {
+            if (pile.Cards.Peek().Rank == Rank.NonExist) {
+                pile.Cards.Pop();
+                return false;
+            }
+        }
+        else {
             return true;
         }
         var tempStack = new Stack<Card>();
@@ -147,7 +136,7 @@ public class Game {
         }
         var lookaheadCard = pile.Cards.Pop();
         tempStack.Push(topCard);
-        int numSameCards = 0;
+        int numSameCards = 1;
         while (pile.Cards.Count > 0 && (lookaheadCard.Rank == topCard.Rank || lookaheadCard.Rank == Rank.Three)) {
             lookaheadCard = pile.Cards.Pop();
             tempStack.Push(lookaheadCard);
@@ -170,31 +159,31 @@ public class Game {
     }
 
     public List<Dictionary<string, object>> GetExamplesFromHistory() {
-        var QValues = Enumerable.Repeat((double)0, History.Count).ToList();
-        var examples = new List<Dictionary<string, object>> { };
-        for (int i = History.Count - 1; i >= 0; i--) {
-            var point = History[i];
-            var player = point.Item1.PlayerQueue.First();
-            var pile = point.Item1.Pile;
-            var stock = point.Item1.Stock;
-            var action = point.Item2;
+        const double DiscountFactor = 0.99;
+        var qValues = Enumerable.Repeat((double)0, _history.Count).ToList();
+        var examples = new List<Dictionary<string, object>>();
+        for (int i = _history.Count - 1; i >= 0; i--) {
+            var (mctsState, action) = _history[i];
+            var player = mctsState.PlayerQueue.First();
+            var pile = mctsState.Pile;
+            var stock = mctsState.Stock;
 
             var example = GetExample(player, pile, stock, action);
 
             int reward = 0;
-            if (MCTSTree.GoalConditionReached(point.Item1)) {
-                bool won = WinningPlayer().Id == AgentId;
+            if (MCTSTree.GoalConditionReached(mctsState)) {
+                bool won = WinningPlayer().Id == _agentId;
                 reward = won ? 1 : 0;
             }
 
-            double qValue = 0;
-            if (i < History.Count - 1) {
-                qValue = reward + QValues[i + 1];
+            double qValue;
+            if (i < _history.Count - 1) {
+                qValue = reward + DiscountFactor * qValues[i + 1];
             }
             else {
                 qValue = reward;
             }
-            QValues[i] = qValue;
+            qValues[i] = qValue;
             example["q_value"] = qValue;
             examples.Add(example);
         }

@@ -15,6 +15,8 @@ public class Action {
         PlayLowestPermitted,
         PlayMultipleLowestPermitted,
         PickUpPile,
+        PlayClosedCard,
+        PlayOpenCard,
     }
 
     public static List<ActionType> GetAllowedActions(Player player, Pile pile, List<Player> opponents) {
@@ -24,22 +26,6 @@ public class Action {
         if (pile.Cards.Count > 0) {
             topCard = pile.Cards.Peek();
         }
-        
-        if (IsValidPlay(player.GetHighestCard().Rank, topCard.Rank)) {
-            actions.Add(ActionType.PlayHighest);
-            actions.Add(ActionType.PlayMultipleHighest);
-        }
-
-        var lowestPermittedCard = player.GetLowestPermittedCard(topCard.Rank).Rank;
-        if (IsValidPlay(lowestPermittedCard, topCard.Rank)) {
-            actions.Add(ActionType.PlayLowestPermitted);
-            actions.Add(ActionType.PlayMultipleLowestPermitted);
-        }
-
-        if (pile.Cards.Count > 0) {
-            actions.Add(ActionType.PickUpPile);
-        }
-        
         if (player.HasTwo()) {
             actions.Add(ActionType.PlayTwo); 
             actions.Add(ActionType.PlayMultipleTwo);
@@ -55,6 +41,28 @@ public class Action {
         if (player.HasTen() && IsValidPlay(Rank.Ten, topCard.Rank)) {
             actions.Add(ActionType.PlayTen);
             actions.Add(ActionType.PlayMultipleTen);
+        }
+        if (IsValidPlay(player.GetHighestCard().Rank, topCard.Rank)) {
+            actions.Add(ActionType.PlayHighest);
+            actions.Add(ActionType.PlayMultipleHighest);
+        }
+        if (IsValidPlay(player.GetLowestPermittedCard(topCard.Rank).Rank, topCard.Rank)) {
+            actions.Add(ActionType.PlayLowestPermitted);
+            actions.Add(ActionType.PlayMultipleLowestPermitted);
+        }
+
+        if (player.Hand.Count == 0 && player.Open.Count > 0) {
+            actions.Clear();
+            actions.Add(ActionType.PlayOpenCard);
+        }
+
+        if (player.Open.Count == 0 && player.Hand.Count == 0 && player.Closed.Count > 0) {
+            actions.Clear();
+            actions.Add(ActionType.PlayClosedCard);
+        }
+        
+        if (actions.Count == 0 && pile.Cards.Count > 0) {
+            actions.Add(ActionType.PickUpPile);
         }
 
         return actions;
@@ -78,33 +86,61 @@ public class Action {
         return topCardRank > cardRank;
     }
 
-    public static void PlayHighest(Player player, Pile pile) {
+    private static void PlayOpenCard(Player player, Pile pile) {
+        var topCard = pile.Cards.Count > 0 ? pile.Cards.Peek() : new Card(Suit.NonExist, Rank.NonExist);
+        var cardToPlay = player.GetLowestPermittedCard(topCard.Rank);
+        if (IsValidPlay(cardToPlay.Rank, topCard.Rank)) {
+            PlayLowestPermitted(player, pile);
+        }
+        else {
+            if (cardToPlay.Rank != Rank.NonExist) {
+                player.Open.Remove(cardToPlay);
+                player.DrawToHand(cardToPlay);
+            }
+            PickUpPile(player, pile);
+            pile.Cards.Push(new Card(Suit.NonExist, Rank.NonExist));
+        }
+    }
+
+    private static void PlayClosedCard(Player player, Pile pile) {
+        var rankToPlay = player.Closed[0].Rank;
+        var topCard = pile.Cards.Count > 0 ? pile.Cards.Peek() : new Card(Suit.NonExist, Rank.NonExist);
+        if (IsValidPlay(rankToPlay, topCard.Rank)) {
+            var playerCards = player.Closed;
+            PlayRank(playerCards, pile, rankToPlay);
+        }
+        else {
+            var cardToPlay = player.Closed[0];
+            player.Closed.Remove(cardToPlay);
+            player.DrawToHand(cardToPlay);
+            PickUpPile(player, pile);
+        }
+    }
+
+    private static void PlayHighest(Player player, Pile pile) {
         var maxRank = player.GetHighestCard().Rank;
         var playerCards = player.GetListOfCards();
         PlayRank(playerCards, pile, maxRank);
     }
 
-    public static void PlayMultipleHighest(Player player, Pile pile) {
+    private static void PlayMultipleHighest(Player player, Pile pile) {
         var maxRank = player.GetHighestCard().Rank;
         var playerCards = player.GetListOfCards();
         PlayMultipleRank(playerCards, pile, maxRank);
     }
 
-    public static void PlayLowestPermitted(Player player, Pile pile) {
+    private static void PlayLowestPermitted(Player player, Pile pile) {
         var topCard = new Card(Suit.NonExist, Rank.NonExist);
         var minRank = Rank.Two;
         if (pile.Cards.Count > 0) {
             topCard = pile.Cards.Peek();
-            minRank = player.GetLowestPermittedCard(topCard.Rank).Rank;
         }
-        else {
-            minRank = player.GetLowestPermittedCard(minRank).Rank;
-        }
+        minRank = player.GetLowestPermittedCard(topCard.Rank).Rank;
         var playerCards = player.GetListOfCards();
         PlayRank(playerCards, pile, minRank);
     }
 
-    public static void PlayMultipleLowestPermitted(Player player, Pile pile) {
+    private static void PlayMultipleLowestPermitted(Player player, Pile pile) {
         var topCard = new Card(Suit.NonExist, Rank.NonExist);
         if (pile.Cards.Count > 0) {
             topCard = pile.Cards.Peek();
@@ -114,49 +150,43 @@ public class Action {
         PlayMultipleRank(playerCards, pile, minRank);
     }
 
-    public static void PlayRandom(Player player, Pile pile, Random rnd) {
-        var playerCards = player.GetListOfCards();
-        var randomRank = player.GetRandomCard(rnd).Rank;
-        PlayRank(playerCards, pile, randomRank);
-    }
-
-    public static void PlayTwo(Player player, Pile pile) {
+    private static void PlayTwo(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayRank(playerCards, pile, Rank.Two);
     }
 
-    public static void PlayMultipleTwo(Player player, Pile pile) {
+    private static void PlayMultipleTwo(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayMultipleRank(playerCards, pile, Rank.Two);
     }
 
-    public static void PlayThree(Player player, Pile pile) {
+    private static void PlayThree(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayRank(playerCards, pile, Rank.Three);
     }
 
-    public static void PlayMultipleThree(Player player, Pile pile) {
+    private static void PlayMultipleThree(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayMultipleRank(playerCards, pile, Rank.Three);
     }
 
-    public static void PlaySeven(Player player, Pile pile) {
+    private static void PlaySeven(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayRank(playerCards, pile, Rank.Seven);
     }
 
-    public static void PlayMultipleSeven(Player player, Pile pile) {
+    private static void PlayMultipleSeven(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayMultipleRank(playerCards, pile, Rank.Seven);
     }
 
-    public static void PlayTen(Player player, Pile pile) {
+    private static void PlayTen(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayRank(playerCards, pile, Rank.Ten);
         pile.Burn();
     }
 
-    public static void PlayMultipleTen(Player player, Pile pile) {
+    private static void PlayMultipleTen(Player player, Pile pile) {
         var playerCards = player.GetListOfCards();
         PlayMultipleRank(playerCards, pile, Rank.Ten);
         pile.Burn();
@@ -182,31 +212,35 @@ public class Action {
     }
 
     public static void PlayAction(Player player, Pile pile, ActionType actionType) {
-        if (actionType == Action.ActionType.PlayTwo) 
+        if (actionType == ActionType.PlayOpenCard)
+            PlayOpenCard(player, pile);
+        if (actionType == ActionType.PlayClosedCard)
+            PlayClosedCard(player, pile);
+        if (actionType == ActionType.PlayTwo) 
             PlayTwo(player, pile);
-        if (actionType == Action.ActionType.PlayMultipleTwo)
+        if (actionType == ActionType.PlayMultipleTwo)
             PlayMultipleTwo(player, pile);
-        if (actionType == Action.ActionType.PlayThree)
+        if (actionType == ActionType.PlayThree)
             PlayThree(player, pile);
-        if (actionType == Action.ActionType.PlayMultipleThree)
+        if (actionType == ActionType.PlayMultipleThree)
             PlayMultipleThree(player, pile);
-        if (actionType == Action.ActionType.PlaySeven)
+        if (actionType == ActionType.PlaySeven)
             PlaySeven(player, pile);
-        if (actionType == Action.ActionType.PlayMultipleSeven)
+        if (actionType == ActionType.PlayMultipleSeven)
             PlayMultipleSeven(player, pile);
-        if (actionType == Action.ActionType.PlayTen)
+        if (actionType == ActionType.PlayTen)
             PlayTen(player, pile);
-        if (actionType == Action.ActionType.PlayMultipleTen)
+        if (actionType == ActionType.PlayMultipleTen)
             PlayMultipleTen(player, pile);
-        if (actionType == Action.ActionType.PlayHighest)
+        if (actionType == ActionType.PlayHighest)
             PlayHighest(player, pile);
-        if (actionType == Action.ActionType.PlayMultipleHighest)
+        if (actionType == ActionType.PlayMultipleHighest)
             PlayMultipleHighest(player, pile);
-        if (actionType == Action.ActionType.PlayLowestPermitted)
+        if (actionType == ActionType.PlayLowestPermitted)
             PlayLowestPermitted(player, pile);
-        if (actionType == Action.ActionType.PlayMultipleLowestPermitted)
+        if (actionType == ActionType.PlayMultipleLowestPermitted)
             PlayMultipleLowestPermitted(player, pile);
-        if (actionType == Action.ActionType.PickUpPile)
+        if (actionType == ActionType.PickUpPile)
             PickUpPile(player, pile);
     }
 }

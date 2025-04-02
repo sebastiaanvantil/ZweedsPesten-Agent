@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-
-namespace ZweedsPesten_Agent
+﻿namespace ZweedsPesten_Agent
 {
     public class Program
     {
         public static void Main(string[] args) {
-            var QFunction = new TILDE_RT(100, 2);
-            var ZweedsPesten_Agent = new Agent(QFunction);
-            ZweedsPesten_Agent.Train(1);
-            QFunction.PrintTree(QFunction.Root, 100);
+            var qFunction = new TILDE_RT(100, 2);
+            var zweedsPestenAgent = new Agent(qFunction);
+            zweedsPestenAgent.Train(5);
+            qFunction.PrintTree(qFunction.Root, 100);
         }
     }
 }

@@ -1,8 +1,8 @@
 namespace ZweedsPesten_Agent;
 
 public class Pile {
-    public Stack<Card> Cards = [];
-    public Stack<Card> BurnedCards = [];
+    public readonly Stack<Card> Cards = [];
+    private readonly Stack<Card> _burnedCards = [];
     
     public Pile() {
         
@@ -10,7 +10,7 @@ public class Pile {
 
     public Pile(Pile pile) {
         Cards = new Stack<Card>(pile.Cards.Reverse().Select(card => new Card(card.Suit, card.Rank)));
-        BurnedCards = new Stack<Card>(pile.BurnedCards.Select(card => new Card(card.Suit, card.Rank)));
+        _burnedCards = new Stack<Card>(pile._burnedCards.Select(card => new Card(card.Suit, card.Rank)));
     }
     
     public void Add(List<Card> cardsToAdd) {
@@ -30,7 +30,7 @@ public class Pile {
         //Console.WriteLine("burning cards");
         while (Cards.Count > 0) {
             var burnedcard = Cards.Pop();
-            BurnedCards.Push(burnedcard);
+            _burnedCards.Push(burnedcard);
         }
     }
 }

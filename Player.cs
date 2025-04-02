@@ -1,5 +1,3 @@
-using System.Security.AccessControl;
-
 namespace ZweedsPesten_Agent;
 
 public class Player(int id) {
@@ -44,19 +42,16 @@ public class Player(int id) {
     
     public Card GetHighestCard() {
         var cards = GetListOfCards();
-        var highestCard = cards.Count > 0 ? cards
+        var highestCard = (cards.Count > 0 ? cards
             .Where(card => Enum.IsDefined(typeof(NonSpecialRank), (int)card.Rank))
-            .MaxBy(card => card.Rank) : new Card(Suit.NonExist, Rank.NonExist);
-        if (highestCard == null) {
-            highestCard = cards
-                .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))
-                .MaxBy(card => card.Rank);
-        }
-        
+            .MaxBy(card => card.Rank) : new Card(Suit.NonExist, Rank.NonExist)) ?? cards
+            .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))
+            .MaxBy(card => card.Rank);
+
         return highestCard ?? new Card(Suit.NonExist, Rank.NonExist);
     }
-    
-    public Card GetLowestCard() {
+
+    private Card GetLowestCard() {
         var cards = GetListOfCards();
         var lowestCard = cards.Count > 0 ? cards
             .Where(card => Enum.IsDefined(typeof(NonSpecialRank), (int)card.Rank))
@@ -76,35 +71,29 @@ public class Player(int id) {
         }
         var cards = GetListOfCards();
         if (topCardRank != Rank.Seven) {
-            var lowestPermittedCard = cards.Count > 0 ? cards
+            var lowestPermittedCard = (cards.Count > 0 ? cards
                 .Where(card => Enum.IsDefined(typeof(NonSpecialRank), (int)card.Rank))    
                 .Where(card => card.Rank >= topCardRank)
-                .MinBy(card => card.Rank) : new Card(Suit.NonExist, Rank.NonExist);
-            if (lowestPermittedCard == null) {
-                lowestPermittedCard = cards.Count > 0 ? cards
-                    .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))    
-                    .Where(card => card.Rank >= topCardRank)
-                    .MinBy(card => card.Rank) : new Card(Suit.NonExist, Rank.NonExist);
-            }
-            
+                .MinBy(card => card.Rank) : new Card(Suit.NonExist, Rank.NonExist)) ?? (cards.Count > 0 ? cards
+                .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))    
+                .Where(card => card.Rank >= topCardRank || card.Rank == Rank.Two || card.Rank == Rank.Three )
+                .MinBy(card => card.Rank) : new Card(Suit.NonExist, Rank.NonExist));
+
 
             return lowestPermittedCard ?? new Card(Suit.NonExist, Rank.NonExist);
         }
 
-        var lowestPermittedCard2 = cards.Count > 0
+        var lowestPermittedCard2 = (cards.Count > 0
             ? cards
                 .Where(card => Enum.IsDefined(typeof(NonSpecialRank), (int)card.Rank))
                 .Where(card => card.Rank < Rank.Seven)
                 .MinBy(card => card.Rank)
-            : new Card(Suit.NonExist, Rank.NonExist);
-        if (lowestPermittedCard2 == null) {
-            lowestPermittedCard2 = cards.Count > 0
-                ? cards
-                    .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))
-                    .Where(card => card.Rank < Rank.Seven)
-                    .MinBy(card => card.Rank) ?? new Card(Suit.NonExist, Rank.NonExist)
-                : new Card(Suit.NonExist, Rank.NonExist);
-        }
+            : new Card(Suit.NonExist, Rank.NonExist)) ?? (cards.Count > 0
+            ? cards
+                .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))
+                .Where(card => card.Rank < Rank.Seven)
+                .MinBy(card => card.Rank) ?? new Card(Suit.NonExist, Rank.NonExist)
+            : new Card(Suit.NonExist, Rank.NonExist));
 
         return lowestPermittedCard2;
     }
@@ -138,13 +127,9 @@ public class Player(int id) {
         var cards = GetListOfCards();
         var lowestValueCard = cards
             .Where(card => Enum.IsDefined(typeof(NonSpecialRank), (int)card.Rank))
-            .MinBy(card => card.Rank);
-
-        if (lowestValueCard == null) {
-            lowestValueCard = cards
-                .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))
-                .MinBy(card => card.Rank);
-        }
+            .MinBy(card => card.Rank) ?? (cards
+            .Where(card => Enum.IsDefined(typeof(Rank), (int)card.Rank))
+            .MinBy(card => card.Rank) ?? new Card(Suit.NonExist, Rank.NonExist));
 
         return lowestValueCard;
     }

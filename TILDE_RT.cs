@@ -1,7 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace ZweedsPesten_Agent;
 
 
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public class TILDE_RT(int maxDepth, int minSamplesSplit) {
     private readonly List<string> _numericalFeatures = [
         "num_cards", "highest_card", "lowest_permitted_card", "num_pile_cards", "num_stock_cards", "top_card_pile_value"
@@ -54,7 +57,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             
             var testValues = Enumerable.Range(0, 5)
                 .Select(i => min + i * (max - min) / (5 - 1))
-                .ToList();;
+                .ToList();
 
             foreach (double testValue in testValues) {
                 Func<Dictionary<string, object>, bool> folLiteral = e => Convert.ToDouble(e[feature]) <= testValue;
@@ -128,7 +131,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         while (node != null && !node.IsLeafNode()) {
             bool nodeHasChanged = false;
             if (node.Test == null) {
-                return double.NaN;
+                return 0;
             }
             if (node.Test.Contains("<=")) {
                 string[] test = node.Test.Split("<=");
@@ -142,8 +145,8 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             if (!nodeHasChanged && node.Test.Contains("action")) {
                 string[] test = node.Test.Split("==");
                 string action = test[0].Trim();
-                var actioncheck = example[action]?.ToString();
-                node = actioncheck == "True" ? node.LeftChild : node.RightChild;
+                string? actionCheck = example[action].ToString();
+                node = actionCheck == "True" ? node.LeftChild : node.RightChild;
             }
             else if (!nodeHasChanged && node.Test.Contains("==")) {
                 string[] test = node.Test.Split("==");
