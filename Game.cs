@@ -8,6 +8,7 @@ public class Game {
     private readonly List<(MCTSState, Action.ActionType)> _history = [];
     private readonly TILDE_RT _qFunction;
     private readonly int _agentId;
+    private const int MaxIterations = 2000;
 
     public Game(int numPlayers, int agentId, TILDE_RT qFunction) {
         for (int i = 0; i < numPlayers; i++) {
@@ -58,23 +59,23 @@ public class Game {
         }
     }
 
-    public int Run() {
+    public (int, int) Run() {
         DealCards();
         var startingPlayer = GetStartingPlayer();
         InitQueue(startingPlayer);
         
         bool gameOver = false;
-        //int i = 0;
+        int i = 0;
         int invalidGameCount = 0;
-        while (!gameOver) {
+        while (!gameOver || i < MaxIterations) {
             var player = _playerQueue.First();
             invalidGameCount += Turn(player);
             //Console.WriteLine("Turn: " + i);
             
             gameOver = GoalConditionReached();
-            //i++;
+            i++;
         }
-        return invalidGameCount;
+        return (i, invalidGameCount);
     }
     
     // The game is over if there is any player that has no cards left

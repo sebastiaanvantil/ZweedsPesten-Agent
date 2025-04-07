@@ -4,7 +4,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
     private readonly MCTSNode _rootNode = new(initialMctsState);
     private readonly Random _rnd = new();
     private const double ExplorationConstant = 1;
-    private const int MaxNumSimulationIterations = 2000;
+    private const int MaxSimulationIterations = 2000;
 
     public (int, Action.ActionType) RunMCTS(int simulations) {
         int invalidGameCount = 0;
@@ -44,7 +44,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
     private (bool, double) Simulation(MCTSNode selectedNode) {
         var node = selectedNode;
         int i = 0;
-        while (!GoalConditionReached(node.MCTSState) && i < MaxNumSimulationIterations) {
+        while (!GoalConditionReached(node.MCTSState) && i < MaxSimulationIterations) {
             if (i == 1500) {
                 Console.WriteLine("");
             }
@@ -77,7 +77,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
             i++;
             //Console.WriteLine("Simulation Iteration: " + i);
         }
-        bool invalidGame = i >= MaxNumSimulationIterations;
+        bool invalidGame = i >= MaxSimulationIterations;
         
         return (invalidGame, RewardFromGame(node.MCTSState));
     }

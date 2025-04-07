@@ -6,6 +6,7 @@ public class Agent {
     private readonly TILDE_RT _qFunction;
     private List<Dictionary<string, object>> _examples;
     private readonly int _agentId;
+    private const int MaxIterations = 2000;
     
     public Agent(TILDE_RT qFunction) {
         _qFunction = qFunction;
@@ -37,8 +38,11 @@ public class Agent {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         var game = new Game(3, _agentId, _qFunction);
-        int invalidGameCount = game.Run();
-        var newExamples = game.GetExamplesFromHistory();
+        (int iterations, int invalidGameCount) = game.Run();
+        var newExamples = new List<Dictionary<string, object>>();
+        if (iterations < MaxIterations) {
+            newExamples = game.GetExamplesFromHistory();
+        }
         stopwatch.Stop();
         Console.WriteLine("Finished Episode " + episode + 
                           "\nInvalid Game Count: " + invalidGameCount + 
