@@ -13,9 +13,9 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
 
     private readonly List<string> _actionFeature = ["action"];
 
-    public readonly TILDE_RT_Node Root = new TILDE_RT_Node();
+    public readonly TILDE_RT_Node Root = new ();
 
-    public TILDE_RT_Node Train(List<Dictionary<string, object>> examples, int depth = 0) {
+    public TILDE_RT_Node Train(List<Dictionary<string, object>> examples) {
         Split(Root, examples, 0);
         return Root;
     }
