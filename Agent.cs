@@ -10,7 +10,7 @@ public class Agent {
     
     public Agent(TILDE_RT qFunction) {
         _qFunction = qFunction;
-        _examples = new List<Dictionary<string, object>>();
+        _examples = [];
         
         var rnd = new Random();
         _agentId = rnd.Next(1, 3);
@@ -19,18 +19,24 @@ public class Agent {
     public void Train(int maxEpisodes) {
         for (int episode = 0; episode < maxEpisodes; episode++) {
             var newExamples = RunEpisode(episode);
-            var examplesToRemove = new List<Dictionary<string, object>>();
-            foreach (var newExample in newExamples) {
-                examplesToRemove.AddRange(_examples.Where(example => EqualDicts(newExample, example)));
-                _examples.Add(newExample);
-            }
-            foreach (var example in examplesToRemove) {
-                _examples.Remove(example);
-            }
-            _examples.RemoveAll(example => (double)example["q_value"] == 0);
+            AddNewExamplesToOldExamples(newExamples);
             _qFunction.Train(_examples);
         }
-        _qFunction.PrintTree(_qFunction.Root, 100);
+    }
+
+    private void AddNewExamplesToOldExamples(List<Dictionary<string, object>> newExamples) {
+        foreach (var newExample in newExamples) {
+            var equalExample = _examples.Find(example => EqualDicts(newExample, example));
+            if (equalExample != null) {
+                int count = (int)equalExample["count"];
+                double newQValue = (count * (double)newExample["q_value"] + (double)newExample["q_value"]) / count + 1;
+                equalExample["count"] = count + 1;
+                equalExample["q_value"] = newQValue;
+            }
+            else {
+                _examples.Add(newExample);
+            }
+        }
     }
 
     private List<Dictionary<string, object>> RunEpisode(int episode) {
@@ -52,10 +58,10 @@ public class Agent {
     }
 
     private static bool EqualDicts(Dictionary<string, object> a, Dictionary<string, object> b) {
-        const string excludedKey = "q_value";
-        
-        var keysA = a.Keys.Where(k => k != excludedKey).ToList();
-        var keysB = b.Keys.Where(k => k != excludedKey).ToList();
+        var excludedKeys = new HashSet<string> { "q_value", "count" };
+
+        var keysA = a.Keys.Where(k => !excludedKeys.Contains(k)).ToList();
+        var keysB = b.Keys.Where(k => !excludedKeys.Contains(k)).ToList();
 
         if (keysA.Count != keysB.Count) {
             return false;
@@ -68,4 +74,5 @@ public class Agent {
 
         return true;
     }
+
 }

@@ -53,7 +53,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
             var softMaxValues = (List<double>)[];
             foreach (var child in node.Children) {
                 var example = TILDE_RT.MCTSNode2Example(node, child.ParentAction.ToString());
-                double prediction = qFunction.Predict(qFunction.Root, example);
+                double prediction = TILDE_RT.Predict(qFunction.Root, example);
 
                 softMaxValues.Add(Math.Pow(Math.E, prediction));
             }

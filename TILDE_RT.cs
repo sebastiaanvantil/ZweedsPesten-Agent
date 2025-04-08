@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace ZweedsPesten_Agent;
 
@@ -11,9 +12,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
     ];
     private readonly List<string> _booleanFeatures = ["has_2", "has_3", "has_7", "has_10"];
 
-    private readonly List<string> _actionFeature = ["action"];
-
-    public readonly TILDE_RT_Node Root = new ();
+    public readonly TILDE_RT_Node Root = new (false);
 
     public TILDE_RT_Node Train(List<Dictionary<string, object>> examples) {
         Split(Root, examples, 0);
@@ -22,15 +21,13 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
 
     private void Split(TILDE_RT_Node node, List<Dictionary<string, object>> examples, int depth) {
         if (examples.Count < minSamplesSplit || depth >= maxDepth) {
-            double total = examples.Sum(example => Convert.ToDouble(example["q_value"]));
-            node.Qvalue = total / examples.Count;  
+            SplitLeaf(node, examples);
             return;
         }
         
         var bestSplit = FindBestSplit(examples);
         if (bestSplit == null) {
-            double total = examples.Sum(example => Convert.ToDouble(example["q_value"]));
-            node.Qvalue = total / examples.Count;  
+            SplitLeaf(node, examples);
             return;
         }
 
@@ -39,11 +36,47 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         var leftExamples = examples.Where(e => bestSplit.Item2(e)).ToList();
         var rightExamples = examples.Where(e => !bestSplit.Item2(e)).ToList();
         
-        node.LeftChild = new TILDE_RT_Node();
-        node.RightChild = new TILDE_RT_Node();
+        node.LeftChild = new TILDE_RT_Node(false);
+        node.RightChild = new TILDE_RT_Node(false);
 
         Split(node.LeftChild, leftExamples, depth + 1);
         Split(node.RightChild, rightExamples, depth + 1);
+    }
+
+    private void SplitLeaf(TILDE_RT_Node node, List<Dictionary<string, object>> examples) {
+        string[] uniqueActions = [
+            "PlayTwo",
+            "PlayMultipleTwo",
+            "PlayThree",
+            "PlayMultipleThree",
+            "PlaySeven",
+            "PlayMultipleSeven",
+            "PlayTen",
+            "PlayMultipleTen",
+            "PlayHighest",
+            "PlayMultipleHighest",
+            "PlayLowestPermitted",
+            "PlayMultipleLowestPermitted",
+            "PickUpPile",
+            "PlayClosedCard",
+            "PlayOpenCard",
+        ];
+
+        var actionsInExamples = examples.Where(example => example.ContainsKey("action"))
+            .Select(example => (string)example["action"]).Distinct().ToList();
+
+        foreach (string action in uniqueActions) {
+            var actionLeaf = new TILDE_RT_Node(true, action);
+            if (actionsInExamples.Contains(action)) {
+                var actionExamples = examples.Where(example => (string)example["action"] == action).ToList();
+                double summedQValue = actionExamples.Sum(example => Convert.ToDouble(example["q_value"]));
+                actionLeaf.Qvalue = summedQValue / actionExamples.Count;
+            }
+            else {
+                actionLeaf.Qvalue = 0.5;
+            }
+            node.ActionChildren.Add(actionLeaf);
+        }
     }
 
     private Tuple<string, Func<Dictionary<string, object>, bool>?>? FindBestSplit(List<Dictionary<string, object>> examples) {
@@ -94,38 +127,16 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
                 bestFolLiteral = folLiteral;
             }
         }
-
-        foreach (string feature in _actionFeature) {
-            var uniqueActions = examples.Select(e => e[feature]).Distinct().ToList();
-
-            foreach (string action in uniqueActions) {
-                Func<Dictionary<string, object>, bool> folLiteral = e => Convert.ToBoolean((string)e[feature] == action);
-                
-                var left = examples.Where(folLiteral).Select(e => Convert.ToDouble(e["q_value"])).ToList();
-                var right = examples.Where(e => !folLiteral(e)).Select(e => Convert.ToDouble(e["q_value"])).ToList();
-
-                if (left.Count == 0 || right.Count == 0) continue;
-
-                double variance = (left.Count * Variance(left) + right.Count * Variance(right)) / examples.Count;
-                if (variance < minVariance)
-                {
-                    minVariance = variance;
-                    bestFeature = $"action == {action}";
-                    bestFolLiteral = folLiteral;
-                }
-            }
-        }
         
         return bestFeature == null ? null : Tuple.Create(bestFeature, bestFolLiteral);
     }   
     
-    private double Variance(List<double> values)
-    {
+    private static double Variance(List<double> values) {
         double mean = values.Average();
         return values.Average(v => Math.Pow(v - mean, 2));
     }
 
-    public double Predict(TILDE_RT_Node rootNode, Dictionary<string, object> example) {
+    public static double Predict(TILDE_RT_Node rootNode, Dictionary<string, object> example) {
         var node = rootNode;
 
         while (node != null && !node.IsLeafNode()) {
@@ -155,25 +166,55 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             }
         }
 
-        if (node.Qvalue != null) {
-            return node.Qvalue;
+        if (node == null) {
+            return 0.5;
+        }
+        string exampleAction = (string)example["action"];
+
+        foreach (var actionLeaf in node.ActionChildren) {
+            if (actionLeaf.Test == exampleAction) {
+                return actionLeaf.Qvalue;
+            }
         }
 
-        return 0;
+        return 0.5;
     }
     
-    public void PrintTree(TILDE_RT_Node? node, int depth) {
-        if (node == null) return;
+    // I did not come up with this printing approach myself
+    // Inspired by: https://cs.phyley.com/binary-tree/print-level-by-level or https://www.youtube.com/watch?v=o-_Gk0rBeIo on YouTube
+    public static void PrintTree(TILDE_RT_Node root) {
+        var queue = new Queue<(TILDE_RT_Node?, int depth)>();
+        queue.Enqueue((root, 0));
         
-        string indent = new string(' ', depth * 4);
-        if (node.IsLeafNode())
-            Console.WriteLine($"{indent}[Leaf] Q-value: {node.Qvalue:F2}");
-        else
-        {
-            Console.WriteLine($"{indent}If {node.Test}:");
-            PrintTree(node.LeftChild, depth + 1);
-            Console.WriteLine($"{indent}Else:");
-            PrintTree(node.RightChild, depth + 1);
+        int currentDepth = 0;
+
+        while(queue.Count > 0) {
+            (var node, int depth) = queue.Dequeue();
+            if (node == null) continue;
+            if (depth != currentDepth) {
+                Console.WriteLine();
+                currentDepth = depth;
+            }
+            
+            string label = "";
+            if (!node.IsLeaf) {
+                label += node.Test;
+            }
+            else {
+                label += Convert.ToString(node.Qvalue, CultureInfo.CurrentCulture);
+            }
+                
+            Console.Write("[" + label + "]");
+
+            if (node.IsLeafNode()) {
+                foreach (var t in node.ActionChildren) {
+                    queue.Enqueue((t, depth + 1));
+                }
+            }
+            else if (node.LeftChild != null && node.RightChild != null) {
+                queue.Enqueue((node.LeftChild, depth + 1));
+                queue.Enqueue((node.RightChild, depth + 1));
+            }
         }
     }
 
@@ -184,12 +225,12 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         var stock = node.MCTSState.Stock;
         example["num_cards"] = player.GetNumCards();
         example["highest_card"] = (int)player.GetHighestCard().Rank;
-        var topcard = new Card(Suit.Clubs, Rank.Two);
-        if (pile.Cards.Count > 0) topcard = pile.Cards.Peek();
-        example["lowest_permitted_card"] = (int)player.GetLowestPermittedCard(topcard.Rank).Rank;
+        var topCard = new Card(Suit.Clubs, Rank.NonExist);
+        if (pile.Cards.Count > 0) topCard = pile.Cards.Peek();
+        example["lowest_permitted_card"] = (int)player.GetLowestPermittedCard(topCard.Rank).Rank;
         example["num_pile_cards"] = pile.Cards.Count;
         example["num_stock_cards"] = stock.Cards.Count;
-        example["top_card_pile_value"] = topcard.Rank;
+        example["top_card_pile_value"] = topCard.Rank;
         example["has_2"] = player.HasTwo();
         example["has_3"] = player.HasThree();
         example["has_7"] = player.HasSeven();

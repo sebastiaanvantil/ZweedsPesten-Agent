@@ -194,7 +194,7 @@ public class Game {
         return examples;
     }
 
-    private Dictionary<string, object> GetExample(Player player, Pile pile, Stock stock, Action.ActionType action) {
+    private static Dictionary<string, object> GetExample(Player player, Pile pile, Stock stock, Action.ActionType action) {
         var topCard = pile.Cards.Count > 0 ? pile.Cards.Peek() : new Card(Suit.NonExist, Rank.NonExist);
         var example = new Dictionary<string, object> {
             ["num_cards"] = player.GetNumCards(),
@@ -208,6 +208,7 @@ public class Game {
             ["has_7"] = player.HasSeven(),
             ["has_10"] = player.HasTen(),
             ["action"] = action.ToString(),
+            ["count"] = 1,
         };
 
         return example;

@@ -3,11 +3,12 @@
     public class Program
     {
         public static void Main(string[] args) {
-            
-            var qFunction = new TILDE_RT(10, 2);
+            const int maxDepth = 10;
+            const int maxEpisodes = 400;
+            var qFunction = new TILDE_RT(maxDepth, 2);
             var zweedsPestenAgent = new Agent(qFunction);
-            zweedsPestenAgent.Train(400);
-            qFunction.PrintTree(qFunction.Root, 100);
+            zweedsPestenAgent.Train(maxEpisodes);
+            TILDE_RT.PrintTree(qFunction.Root);
             }
     }
 }
