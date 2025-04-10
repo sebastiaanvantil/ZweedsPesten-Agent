@@ -22,6 +22,11 @@ public class Agent {
             AddNewExamplesToOldExamples(newExamples);
             _qFunction.Train(_examples);
         }
+        Console.WriteLine("Training has finished");
+        Console.WriteLine("Number of training examples: " + _examples.Count);
+        double avgQ = _examples.Sum(example => (double)example["q_value"]) / _examples.Count;
+        Console.WriteLine("Average q_value: " + avgQ);
+        _qFunction.PrintTree();
     }
 
     private void AddNewExamplesToOldExamples(List<Dictionary<string, object>> newExamples) {

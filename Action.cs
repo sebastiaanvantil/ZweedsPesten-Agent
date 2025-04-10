@@ -16,7 +16,6 @@ public class Action {
         PlayMultipleLowestPermitted,
         PickUpPile,
         PlayClosedCard,
-        PlayOpenCard,
     }
 
     public static List<ActionType> GetAllowedActions(Player player, Pile pile, List<Player> opponents) {
@@ -51,11 +50,6 @@ public class Action {
             actions.Add(ActionType.PlayMultipleLowestPermitted);
         }
 
-        if (player.Hand.Count == 0 && player.Open.Count > 0) {
-            actions.Clear();
-            actions.Add(ActionType.PlayOpenCard);
-        }
-
         if (player.Open.Count == 0 && player.Hand.Count == 0 && player.Closed.Count > 0) {
             actions.Clear();
             actions.Add(ActionType.PlayClosedCard);
@@ -84,22 +78,6 @@ public class Action {
         
         // if the Rank of the topCard is 7, then return true if card.Rank < topCard.Rank
         return topCardRank > cardRank;
-    }
-
-    private static void PlayOpenCard(Player player, Pile pile) {
-        var topCard = pile.Cards.Count > 0 ? pile.Cards.Peek() : new Card(Suit.NonExist, Rank.NonExist);
-        var cardToPlay = player.GetLowestPermittedCard(topCard.Rank);
-        if (IsValidPlay(cardToPlay.Rank, topCard.Rank)) {
-            PlayLowestPermitted(player, pile);
-        }
-        else {
-            if (cardToPlay.Rank != Rank.NonExist) {
-                player.Open.Remove(cardToPlay);
-                player.DrawToHand(cardToPlay);
-            }
-            PickUpPile(player, pile);
-            pile.Cards.Push(new Card(Suit.NonExist, Rank.NonExist));
-        }
     }
 
     private static void PlayClosedCard(Player player, Pile pile) {
@@ -212,8 +190,6 @@ public class Action {
     }
 
     public static void PlayAction(Player player, Pile pile, ActionType actionType) {
-        if (actionType == ActionType.PlayOpenCard)
-            PlayOpenCard(player, pile);
         if (actionType == ActionType.PlayClosedCard)
             PlayClosedCard(player, pile);
         if (actionType == ActionType.PlayTwo) 

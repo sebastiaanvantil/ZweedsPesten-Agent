@@ -45,9 +45,6 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
         var node = selectedNode;
         int i = 0;
         while (!GoalConditionReached(node.MCTSState) && i < MaxSimulationIterations) {
-            if (i == 1500) {
-                Console.WriteLine("");
-            }
             node.Children = node.ExpandChildren();
 
             var softMaxValues = (List<double>)[];

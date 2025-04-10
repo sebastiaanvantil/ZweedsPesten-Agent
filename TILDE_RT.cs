@@ -73,15 +73,15 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
                 actionLeaf.Qvalue = summedQValue / actionExamples.Count;
             }
             else {
-                actionLeaf.Qvalue = 0.5;
+                actionLeaf.Qvalue = 1.0/3.0;
             }
             node.ActionChildren.Add(actionLeaf);
         }
     }
 
-    private Tuple<string, Func<Dictionary<string, object>, bool>?>? FindBestSplit(List<Dictionary<string, object>> examples) {
+    private Tuple<string, Func<Dictionary<string, object>, bool>?> FindBestSplit(List<Dictionary<string, object>> examples) {
         double minVariance = double.MaxValue;
-        string? bestFeature = null;
+        string bestFeature = "No Test";
         Func<Dictionary<string, object>, bool>? bestFolLiteral = null;
         
         foreach (string feature in _numericalFeatures) {
@@ -128,7 +128,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             }
         }
         
-        return bestFeature == null ? null : Tuple.Create(bestFeature, bestFolLiteral);
+        return Tuple.Create(bestFeature, bestFolLiteral);
     }   
     
     private static double Variance(List<double> values) {
@@ -167,7 +167,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         }
 
         if (node == null) {
-            return 0.5;
+            return 1.0/3.0;
         }
         string exampleAction = (string)example["action"];
 
@@ -177,30 +177,34 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             }
         }
 
-        return 0.5;
+        return 1.0/3.0;
     }
     
     // I did not come up with this printing approach myself
     // Inspired by: https://cs.phyley.com/binary-tree/print-level-by-level or https://www.youtube.com/watch?v=o-_Gk0rBeIo on YouTube
-    public static void PrintTree(TILDE_RT_Node root) {
-        var queue = new Queue<(TILDE_RT_Node?, int depth)>();
-        queue.Enqueue((root, 0));
+    public void PrintTree() {
+        var queue = new Queue<(TILDE_RT_Node?, int depth, int parentId)>();
+        queue.Enqueue((Root, 0, 0));
         
         int currentDepth = 0;
+        int id = 0;
 
         while(queue.Count > 0) {
-            (var node, int depth) = queue.Dequeue();
+            id++;
+            (var node, int depth, int parentId) = queue.Dequeue();
             if (node == null) continue;
             if (depth != currentDepth) {
                 Console.WriteLine();
+                Console.WriteLine("Depth: " + depth);
                 currentDepth = depth;
             }
             
-            string label = "";
+            string label = "nodeID: " + id + " parentID: " + parentId;
             if (!node.IsLeaf) {
-                label += node.Test;
+                label += " " + node.Test;
             }
             else {
+                label += " " + node.Test + ":";
                 label += Convert.ToString(node.Qvalue, CultureInfo.CurrentCulture);
             }
                 
@@ -208,12 +212,12 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
 
             if (node.IsLeafNode()) {
                 foreach (var t in node.ActionChildren) {
-                    queue.Enqueue((t, depth + 1));
+                    queue.Enqueue((t, depth + 1, id));
                 }
             }
             else if (node.LeftChild != null && node.RightChild != null) {
-                queue.Enqueue((node.LeftChild, depth + 1));
-                queue.Enqueue((node.RightChild, depth + 1));
+                queue.Enqueue((node.LeftChild, depth + 1, id));
+                queue.Enqueue((node.RightChild, depth + 1, id));
             }
         }
     }

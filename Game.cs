@@ -67,7 +67,7 @@ public class Game {
         bool gameOver = false;
         int i = 0;
         int invalidGameCount = 0;
-        while (!gameOver || i < MaxIterations) {
+        while (!gameOver && i < MaxIterations) {
             var player = _playerQueue.First();
             invalidGameCount += Turn(player);
             //Console.WriteLine("Turn: " + i);
@@ -181,7 +181,7 @@ public class Game {
 
             double qValue;
             if (i < _history.Count - 1) {
-                qValue = reward + discountFactor * qValues[i + 1];
+                qValue = discountFactor * qValues[i + 1];
             }
             else {
                 qValue = reward;
