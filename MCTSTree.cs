@@ -4,7 +4,7 @@ public class MCTSTree(MCTSState initialMctsState, TILDE_RT qFunction) {
     private readonly MCTSNode _rootNode = new(initialMctsState);
     private readonly Random _rnd = new();
     private const double ExplorationConstant = 1;
-    private const int MaxSimulationIterations = 2000;
+    private const int MaxSimulationIterations = 300;
 
     public (int, Action.ActionType) RunMCTS(int simulations) {
         int invalidGameCount = 0;

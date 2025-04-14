@@ -8,7 +8,7 @@ public class Game {
     private readonly List<(MCTSState, Action.ActionType)> _history = [];
     private readonly TILDE_RT _qFunction;
     private readonly int _agentId;
-    private const int MaxIterations = 2000;
+    private const int MaxIterations = 300;
 
     public Game(int numPlayers, int agentId, TILDE_RT qFunction) {
         for (int i = 0; i < numPlayers; i++) {
@@ -185,6 +185,9 @@ public class Game {
             }
             else {
                 qValue = reward;
+            }
+            if (qValue > 1) {
+                Console.WriteLine("Q > 0");
             }
             qValues[i] = qValue;
             example["q_value"] = qValue;

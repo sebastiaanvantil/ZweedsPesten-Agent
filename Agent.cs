@@ -6,7 +6,7 @@ public class Agent {
     private readonly TILDE_RT _qFunction;
     private List<Dictionary<string, object>> _examples;
     private readonly int _agentId;
-    private const int MaxIterations = 2000;
+    private const int MaxIterations = 300;
     
     public Agent(TILDE_RT qFunction) {
         _qFunction = qFunction;
@@ -17,10 +17,23 @@ public class Agent {
     }
 
     public void Train(int maxEpisodes) {
+        double timeElapsed = 0;
         for (int episode = 0; episode < maxEpisodes; episode++) {
+            Console.WriteLine("Starting Episode: " + episode);
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var newExamples = RunEpisode(episode);
             AddNewExamplesToOldExamples(newExamples);
             _qFunction.Train(_examples);
+            stopwatch.Stop();
+            timeElapsed += stopwatch.Elapsed.TotalSeconds;
+            double meanEpisodeTime = timeElapsed / (episode + 1);
+            double projectedFinishTime = ((maxEpisodes - episode) * meanEpisodeTime) / 3600;
+            Console.WriteLine("Finished Episode " + episode + 
+                              "\nRuntime: " + stopwatch.Elapsed.TotalSeconds.ToString("F2") + " seconds" +
+                              "\nMean Runtime: " + meanEpisodeTime.ToString("F2") + " seconds" +
+                              "\nProjected Finishing Time: " + projectedFinishTime.ToString("F2") + " hours" +
+                              "\n");
         }
         Console.WriteLine("Training has finished");
         Console.WriteLine("Number of training examples: " + _examples.Count);
@@ -34,7 +47,7 @@ public class Agent {
             var equalExample = _examples.Find(example => EqualDicts(newExample, example));
             if (equalExample != null) {
                 int count = (int)equalExample["count"];
-                double newQValue = (count * (double)newExample["q_value"] + (double)newExample["q_value"]) / count + 1;
+                double newQValue = (count * (double)newExample["q_value"] + (double)newExample["q_value"]) / (count + 1);
                 equalExample["count"] = count + 1;
                 equalExample["q_value"] = newQValue;
             }
@@ -45,20 +58,13 @@ public class Agent {
     }
 
     private List<Dictionary<string, object>> RunEpisode(int episode) {
-        Console.WriteLine("Starting Episode: " + episode);
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        
         var game = new Game(3, _agentId, _qFunction);
         (int iterations, int invalidGameCount) = game.Run();
         var newExamples = new List<Dictionary<string, object>>();
         if (iterations < MaxIterations) {
             newExamples = game.GetExamplesFromHistory();
         }
-        stopwatch.Stop();
-        Console.WriteLine("Finished Episode " + episode + 
-                          "\nInvalid Game Count: " + invalidGameCount + 
-                          "\nRuntime: " + stopwatch.Elapsed.TotalSeconds + " seconds" +
-                          "\n");
         return newExamples;
     }
 

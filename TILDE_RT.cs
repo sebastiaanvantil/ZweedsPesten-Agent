@@ -3,9 +3,6 @@ using System.Globalization;
 
 namespace ZweedsPesten_Agent;
 
-
-
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 public class TILDE_RT(int maxDepth, int minSamplesSplit) {
     private readonly List<string> _numericalFeatures = [
         "num_cards", "highest_card", "lowest_permitted_card", "num_pile_cards", "num_stock_cards", "top_card_pile_value"
@@ -73,7 +70,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
                 actionLeaf.Qvalue = summedQValue / actionExamples.Count;
             }
             else {
-                actionLeaf.Qvalue = 1.0/3.0;
+                actionLeaf.Qvalue = 1.0;
             }
             node.ActionChildren.Add(actionLeaf);
         }
@@ -142,7 +139,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         while (node != null && !node.IsLeafNode()) {
             bool nodeHasChanged = false;
             if (node.Test == null) {
-                return 0;
+                return 1.0;
             }
             if (node.Test.Contains("<=")) {
                 string[] test = node.Test.Split("<=");
@@ -167,7 +164,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         }
 
         if (node == null) {
-            return 1.0/3.0;
+            return 1.0;
         }
         string exampleAction = (string)example["action"];
 
@@ -177,7 +174,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             }
         }
 
-        return 1.0/3.0;
+        return 1.0;
     }
     
     // I did not come up with this printing approach myself
