@@ -70,7 +70,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
                 actionLeaf.Qvalue = summedQValue / actionExamples.Count;
             }
             else {
-                actionLeaf.Qvalue = 1.0;
+                actionLeaf.Qvalue = 1.0/3.0;
             }
             node.ActionChildren.Add(actionLeaf);
         }
@@ -164,7 +164,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
         }
 
         if (node == null) {
-            return 1.0;
+            return 1.0/3.0;
         }
         string exampleAction = (string)example["action"];
 
@@ -174,7 +174,7 @@ public class TILDE_RT(int maxDepth, int minSamplesSplit) {
             }
         }
 
-        return 1.0;
+        return 1.0/3.0;
     }
     
     // I did not come up with this printing approach myself
